@@ -4,7 +4,6 @@
 void print_type64(Elf64_Half c)
 {
     printf("%-36s", "Type:");
-
     switch(c)
 	{
 		case ET_NONE:
@@ -30,6 +29,8 @@ void print_type64(Elf64_Half c)
 
 void print_machine64(Elf64_Half c)
 {
+    //too many machine types and not relevant anyways
+    printf("%-36s", "Type:");
     switch(c)
 	{
 		case EM_NONE:
@@ -50,24 +51,29 @@ void print_machine64(Elf64_Half c)
 	}
 }
 
-void read_header64(int fd, Elf64_Ehdr *header)
+void read_header64(FILE *file, Elf64_Ehdr *header)
 {
-    int bytes_read;
+    fread(((char *)header) + EI_NIDENT, sizeof(Elf64_Ehdr) - EI_NIDENT, 1, file);
 
-    bytes_read = read(fd, header + EI_NIDENT, sizeof(Elf32_Ehdr) - EI_NIDENT);
-
-    if (bytes_read != (sizeof(Elf32_Ehdr) - EI_NIDENT))
+    if (ftell(file) != sizeof(Elf64_Ehdr))
         D_ERROR("Invalid file size")
 
     // ------------------ Print info
     print_header_info(header->e_ident);
     print_type64(header->e_type);
-    print_machine64(header->e_machine);
+    // print_machine64(header->e_machine);
     printf("%-36s0x%08x\n", "Entry point: ", header->e_entry);
-    printf("%-36s%d\n", "Program Header offset: ", header->e_phoff);
-    printf("%-36s%d\n", "Section Header offset: ", header->e_shoff);
-    // skipping flags because irrelevant
     printf("%-36s%d\n", "Elf header size: ", header->e_ehsize);
 
+    printf("%-36s%d (bytes)\n", "Section header offset: ", header->e_shoff);
+    printf("%-36s%d\n", "Section header size: ", header->e_shentsize);
+    if ( header->e_shnum == SHN_UNDEF)
+        printf("%-36s%s\n", "Section entries count:", "Undefined");
+    else
+        printf("%-36s%d\n", "Section entries count:", header->e_shnum);
 
+    printf("%-36s%d (bytes)\n", "Program header offset: ", header->e_phoff);
+    printf("%-36s%d\n", "Program header size: ", header->e_phentsize);
+    printf("%-36s%d\n", "Program entries count:", header->e_phnum);
+    // skipping flags because irrelevant
 }

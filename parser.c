@@ -1,15 +1,12 @@
 #include "parser.h"
 
 // Fill hdr_info + return obj type (32 or 64) || Not gonna handle little vs big endian
-int read_header_info(int fd, unsigned char *hdr_info)
+int read_header_info(FILE *file, unsigned char *hdr_info)
 {
-
-    int bytes_read;
-
-    bytes_read = read(fd, hdr_info, EI_NIDENT);
+    fread(hdr_info, EI_NIDENT, 1, file);
 
 // ------------------ Error check
-    if (bytes_read != EI_NIDENT)
+    if (ftell(file) != EI_NIDENT)
         D_ERROR("Invalid file size")
 
 // Should start with 0x7fELF

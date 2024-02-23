@@ -6,10 +6,11 @@ int main(int argc, char **argv)
     if (argc != 2)
         D_ERROR("Usage : elfparse [ELF file]\n");
 
-    int fd;
+    FILE *file;
     char *filename = argv[1];
 
-    if ((fd = open(filename, O_RDONLY)) < 0)
+
+    if ((file = fopen(filename, "r")) == NULL)
         D_ERROR("Can't open file\n");
 
 // --------------- Begin parse
@@ -18,7 +19,7 @@ int main(int argc, char **argv)
 
     int class;
 
-    class = read_header_info(fd, hdr_info);
+    class = read_header_info(file, hdr_info);
 
     if (class == ELFCLASS32)
     {
@@ -31,9 +32,14 @@ int main(int argc, char **argv)
     else if (class == ELFCLASS64)
     {
         Elf64_Ehdr header;
+        Elf64_Shdr *section_table;
 
         memcpy(header.e_ident, hdr_info, EI_NIDENT);
-        read_header64(fd, &header);
+        read_header64(file, &header);
+
+
+        // section_table = malloc(header.e_shentsize * header.e_shnum);
+
     }
     else
         D_ERROR("Invalid ELF class")
