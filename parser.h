@@ -14,6 +14,7 @@
 
 #include "debug.h"
 
+#define STRING_TOKEN(a) (#a)
 
 int read_header_info(FILE *file, unsigned char *hdr_info);
 
@@ -24,3 +25,5 @@ void print_flags(char c);
 
 void read_header32(FILE *file, Elf32_Ehdr *header);
 void read_header64(FILE *file, Elf64_Ehdr *header);
+
+void read_sections64(FILE *file, Elf64_Shdr *section_table, long count, Elf64_Half e_shstrndx);
