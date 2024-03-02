@@ -3,6 +3,7 @@
 int main(int argc, char **argv)
 {
 
+
     if (argc != 2)
         D_ERROR("Usage : elfparse [ELF file]\n");
 
@@ -16,6 +17,7 @@ int main(int argc, char **argv)
 // --------------- Begin parse
 
     unsigned char hdr_info[EI_NIDENT];
+    char *sh_strtb;
 
     int class;
 
@@ -59,10 +61,29 @@ int main(int argc, char **argv)
             count = header.e_shnum;
         }
 
-        fseek(file, header.e_shoff, SEEK_SET);
-        // printf("HELLO %p\n", section_table);
-        fread(section_table, sizeof(Elf64_Shdr),header.e_shentsize  * count, file);
-        read_sections64(file, section_table, count, header.e_shstrndx);
+        if (count != 0)
+        {
+            fseek(file, header.e_shoff, SEEK_SET);
+            // printf("HELLO %p\n", section_table);
+            fread(section_table, sizeof(Elf64_Shdr),header.e_shentsize  * count, file);
+            read_sections64(file, section_table, count, header.e_shstrndx);
+        }
+        else
+            printf("There are no section headers in this file\n");
+
+        if (header.e_phnum != 0)
+        {
+
+        }
+        else
+            printf("There are no program headers in this file\n");
+        // read program headers
+        /// Display diffsections infos
+        //read dynamic sectiob
+        // relocation sections
+        // symtabs
+        // version info
+        //notes
     }
     else
         D_ERROR("Invalid ELF class")

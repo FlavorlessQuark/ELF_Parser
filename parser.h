@@ -16,6 +16,13 @@
 
 #define STRING_TOKEN(a) (#a)
 
+
+typedef struct SStrings {
+    char        *sh_strtb;
+    char        **strtbs;
+    long        count;
+}       SStrings;
+
 int read_header_info(FILE *file, unsigned char *hdr_info);
 
 void print_header_info(unsigned char *hdr_info);

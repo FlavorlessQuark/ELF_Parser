@@ -200,32 +200,41 @@ void read_header64(FILE *file, Elf64_Ehdr *header)
     // skipping flags because irrelevant
 }
 
-char * make_sh_strtb(FILE *file, Elf64_Shdr *section_table)
+SStrings *make_sh_strtb(FILE *file, Elf64_Shdr *section_table, long count, long e_sht_idx)
 {
-    char *table;
+    SStrings *strings;
 
-    table = malloc(section_table->sh_size);
+    strings = malloc(sizeof (SStrings));
+    strings->sh_strtb = malloc(section_table[e_sht_idx].sh_size);
+    strings->strtbs = malloc(sizeof(*strings->strtbs) * count);
+    strings->count = count;
 
-    fseek(file, section_table->sh_offset, SEEK_SET);
-    fread(table, sizeof(char), section_table->sh_size, file);
+    fseek(file, section_table[e_sht_idx].sh_offset, SEEK_SET);
+    fread(strings->sh_strtb, sizeof(char), section_table[e_sht_idx].sh_size, file);
 
-    return table;
+    for (int i = 0; i < count; ++i)
+    {
+        strings->strtbs[i] = NULL;
+        if (!strncmp(".strtab", strings->sh_strtb + section_table[i].sh_name, 8))
+        {
+            strings->strtbs[i] = malloc(section_table[i].sh_size);
+            fseek(file, section_table[i].sh_offset, SEEK_SET);
+            fread(strings->strtbs[i], sizeof(char), section_table[i].sh_size, file);
+        }
+    }
+
+    return strings;
 }
 
-void read_sections64(FILE *file, Elf64_Shdr *section_table, long count, Elf64_Half e_shstrndx)
+void read_section_headers64(Elf64_Shdr *section_table, SStrings *strings)
 {
-
-    char *sh_strt;
-
-    sh_strt = make_sh_strtb(file, &section_table[e_shstrndx]);
-
     printf("[Nr] %-20s %-15s %-16s %-8s %-16s %-11s %-16s %-6s\n",
         "Name", "Type", "Address", "Offset", "Size", "Entry Size", "Flags", "Align"
     );
-    for (long i = 0; i < count; ++i)
+    for (long i = 0; i < strings->count; ++i)
     {
         printf("[%2d] ", i);
-        printf("%-20s", sh_strt + section_table[i].sh_name);
+        printf("%-20s", strings->sh_strtb + section_table[i].sh_name);
         print_section_type(section_table[i].sh_type);
         printf("%016d ", section_table[i].sh_addr);
         printf("%08x ", section_table[i].sh_offset);
@@ -235,5 +244,106 @@ void read_sections64(FILE *file, Elf64_Shdr *section_table, long count, Elf64_Ha
         // printf("%6d ", section_table[i].sh_flags);
         printf("%6d ", section_table[i].sh_addralign);
         printf("\n");
+    }
+    printf("Done\n");
+}
+
+
+void print_symbol_type(long type)
+{
+    switch(ELF64_ST_TYPE(type)) {
+        case (STT_NOTYPE) :
+            printf("%10s", STRING_TOKEN(STT_NOTYPE));
+            break ;
+
+        case (STT_OBJECT) :
+            printf("%10s", STRING_TOKEN(STT_OBJECT));
+            break ;
+
+        case (STT_FUNC) :
+            printf("%10s", STRING_TOKEN(STT_FUNC));
+            break ;
+
+        case (STT_SECTION) :
+            printf("%10s", STRING_TOKEN(STT_SECTION));
+            break ;
+
+        case (STT_FILE) :
+            printf("%10s", STRING_TOKEN(STT_FILE));
+            break ;
+
+        case (STT_COMMON) :
+            printf("%10s", STRING_TOKEN(STT_COMMON));
+            break ;
+
+        case (STT_TLS) :
+            printf("%10s", STRING_TOKEN(STT_TLS));
+            break ;
+
+        default :
+            printf("Invalid type");
+            break ;
+    }
+}
+
+void print_symbol_bind()
+{
+
+}
+
+void print_symbol_vis()
+{
+
+}
+
+void read_symtab(FILE *file, Elf64_Shdr *section_hdr, SStrings *strings)
+{
+    long entry_count;
+    Elf64_Sym *symbols;
+
+    entry_count  = section_hdr->sh_size / section_hdr->sh_entsize;
+    symbols = malloc(section_hdr->sh_size);
+
+    printf("Symbol table %s contains %d entries : \n", strings->sh_strtb + section_hdr->sh_name, entry_count);
+    printf("[Nr]: %-18s %-3s %-10s %-10s %-10s %-4s %-10s\n",
+        "Value", "Size", "Type", "Bind", "Vis", "Ndx", "Name"
+    );
+    fseek(file, section_hdr->sh_offset, SEEK_SET);
+    fread(symbols, section_hdr->sh_entsize, entry_count, file);
+    for (int i = 0; i < entry_count; ++i)
+    {
+        printf("[%2d] ", i);
+        printf("%018d ", symbols[i].st_value);
+        printf("%5d ", symbols[i].st_size);
+        print_symbol_type(symbols[i].st_info);
+        // print_symbol_bind(symbols[i].st_info);
+        // print_symbol_vis(symbols[i].st_other);
+        // printf("%5d ", symbols[i].st_shndx);
+        // printf("%10s", strt + symbols[i].st_name);
+        printf("\n");
+    }
+    free(symbols);
+}
+
+
+SStrings make_strtbs(FILE *file)
+{
+
+}
+
+void read_sections64(FILE *file, Elf64_Shdr *section_table, long count, Elf64_Half e_shstrndx)
+{
+    SStrings *strings;
+
+    strings = make_sh_strtb(file, section_table, count , e_shstrndx);
+
+    read_section_headers64(section_table, strings);
+    for (int i = 0; i < count; ++i)
+    {
+        if (!strncmp(".symtab", strings->sh_strtb + section_table[i].sh_name, 8))
+        {
+            read_symtab(file, &section_table[i], strings);
+        }
+
     }
 }
