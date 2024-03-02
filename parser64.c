@@ -253,31 +253,31 @@ void print_symbol_type(long type)
 {
     switch(ELF64_ST_TYPE(type)) {
         case (STT_NOTYPE) :
-            printf("%10s", STRING_TOKEN(STT_NOTYPE));
+            printf("%-15s", STRING_TOKEN(STT_NOTYPE));
             break ;
 
         case (STT_OBJECT) :
-            printf("%10s", STRING_TOKEN(STT_OBJECT));
+            printf("%-15s", STRING_TOKEN(STT_OBJECT));
             break ;
 
         case (STT_FUNC) :
-            printf("%10s", STRING_TOKEN(STT_FUNC));
+            printf("%-15s", STRING_TOKEN(STT_FUNC));
             break ;
 
         case (STT_SECTION) :
-            printf("%10s", STRING_TOKEN(STT_SECTION));
+            printf("%-15s", STRING_TOKEN(STT_SECTION));
             break ;
 
         case (STT_FILE) :
-            printf("%10s", STRING_TOKEN(STT_FILE));
+            printf("%-15s", STRING_TOKEN(STT_FILE));
             break ;
 
         case (STT_COMMON) :
-            printf("%10s", STRING_TOKEN(STT_COMMON));
+            printf("%-15s", STRING_TOKEN(STT_COMMON));
             break ;
 
         case (STT_TLS) :
-            printf("%10s", STRING_TOKEN(STT_TLS));
+            printf("%-15s", STRING_TOKEN(STT_TLS));
             break ;
 
         default :
@@ -286,14 +286,50 @@ void print_symbol_type(long type)
     }
 }
 
-void print_symbol_bind()
+void print_symbol_bind(long bind)
 {
-
+    switch(ELF64_ST_BIND(bind)){
+        case (STB_LOCAL) :
+            printf("%-15s", STRING_TOKEN(STB_LOCAL));
+            break ;
+        case (STB_GLOBAL) :
+            printf("%-15s", STRING_TOKEN(STB_GLOBAL));
+            break ;
+        case (STB_WEAK) :
+            printf("%-15s", STRING_TOKEN(STB_WEAK));
+            break ;
+        default :
+            printf("U_BIND");
+            break ;
+    }
 }
 
-void print_symbol_vis()
+void print_symbol_vis(long vis)
 {
-
+    switch(vis)
+    {
+        case (STT_NOTYPE) :
+            printf("%-15s", STRING_TOKEN(STT_NOTYPE));
+            break ;
+        case (STT_OBJECT) :
+            printf("%-15s", STRING_TOKEN(STT_OBJECT));
+            break ;
+        case (STT_FUNC) :
+            printf("%-15s", STRING_TOKEN(STT_FUNC));
+            break ;
+        case (STT_SECTION) :
+            printf("%-15s", STRING_TOKEN(STT_SECTION));
+            break ;
+        case (STT_FILE) :
+            printf("%-15s", STRING_TOKEN(STT_FILE));
+            break ;
+        case (STT_COMMON) :
+            printf("%-15s", STRING_TOKEN(STT_COMMON));
+            break ;
+        case (STT_TLS) :
+            printf("%-15s", STRING_TOKEN(STT_TLS));
+            break ;
+    }
 }
 
 void read_symtab(FILE *file, Elf64_Shdr *section_hdr, SStrings *strings)
@@ -305,7 +341,7 @@ void read_symtab(FILE *file, Elf64_Shdr *section_hdr, SStrings *strings)
     symbols = malloc(section_hdr->sh_size);
 
     printf("Symbol table %s contains %d entries : \n", strings->sh_strtb + section_hdr->sh_name, entry_count);
-    printf("[Nr]: %-18s %-3s %-10s %-10s %-10s %-4s %-10s\n",
+    printf("[Nr]: %-18s %-3s %-15s %-15s %-15s %-4s %-10s\n",
         "Value", "Size", "Type", "Bind", "Vis", "Ndx", "Name"
     );
     fseek(file, section_hdr->sh_offset, SEEK_SET);
@@ -316,10 +352,10 @@ void read_symtab(FILE *file, Elf64_Shdr *section_hdr, SStrings *strings)
         printf("%018d ", symbols[i].st_value);
         printf("%5d ", symbols[i].st_size);
         print_symbol_type(symbols[i].st_info);
-        // print_symbol_bind(symbols[i].st_info);
-        // print_symbol_vis(symbols[i].st_other);
-        // printf("%5d ", symbols[i].st_shndx);
-        // printf("%10s", strt + symbols[i].st_name);
+        print_symbol_bind(symbols[i].st_info);
+        print_symbol_vis(symbols[i].st_other);
+        printf("%5d ", symbols[i].st_shndx);
+        printf("%-10s", strings->strtbs[section_hdr->sh_link] + symbols[i].st_name);
         printf("\n");
     }
     free(symbols);
