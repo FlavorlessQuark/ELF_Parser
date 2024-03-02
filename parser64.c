@@ -220,8 +220,18 @@ SStrings *make_sh_strtb(FILE *file, Elf64_Shdr *section_table, long count, long 
             strings->strtbs[i] = malloc(section_table[i].sh_size);
             fseek(file, section_table[i].sh_offset, SEEK_SET);
             fread(strings->strtbs[i], sizeof(char), section_table[i].sh_size, file);
+            printf("String table \n");
+            for (int n = 0; n < section_table[i].sh_size; ++n)
+            {
+                if (strings->strtbs[i][n] == '\0')
+                    printf("\\0|");
+                else
+                    printf("%c|", strings->strtbs[i][n]);
+            }
+            printf("\n");
         }
     }
+    strings->strtbs[e_sht_idx] = strings->sh_strtb;
 
     return strings;
 }
@@ -355,7 +365,13 @@ void read_symtab(FILE *file, Elf64_Shdr *section_hdr, SStrings *strings)
         print_symbol_bind(symbols[i].st_info);
         print_symbol_vis(symbols[i].st_other);
         printf("%5d ", symbols[i].st_shndx);
-        printf("%-10s", strings->strtbs[section_hdr->sh_link] + symbols[i].st_name);
+        if (ELF64_ST_TYPE(symbols[i].st_info) == STT_SECTION)
+        {
+            printf("%d", symbols[i].st_name);
+             printf("%-10s", strings->sh_strtb + symbols[i].st_name);
+        }
+        else
+            printf("%-10s", strings->strtbs[section_hdr->sh_link] + symbols[i].st_name);
         printf("\n");
     }
     free(symbols);
