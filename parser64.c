@@ -342,7 +342,7 @@ void print_symbol_vis(long vis)
     }
 }
 
-void read_symtab(FILE *file, Elf64_Shdr *section_hdr, SStrings *strings)
+void read_symtab(FILE *file,Elf64_Shdr *other_sects, Elf64_Shdr *section_hdr, SStrings *strings)
 {
     long entry_count;
     Elf64_Sym *symbols;
@@ -367,20 +367,13 @@ void read_symtab(FILE *file, Elf64_Shdr *section_hdr, SStrings *strings)
         printf("%5d ", symbols[i].st_shndx);
         if (ELF64_ST_TYPE(symbols[i].st_info) == STT_SECTION)
         {
-            printf("%d", symbols[i].st_name);
-             printf("%-10s", strings->sh_strtb + symbols[i].st_name);
+            printf("%-10s", strings->sh_strtb + other_sects[symbols[i].st_shndx].sh_name);
         }
         else
             printf("%-10s", strings->strtbs[section_hdr->sh_link] + symbols[i].st_name);
         printf("\n");
     }
     free(symbols);
-}
-
-
-SStrings make_strtbs(FILE *file)
-{
-
 }
 
 void read_sections64(FILE *file, Elf64_Shdr *section_table, long count, Elf64_Half e_shstrndx)
@@ -394,7 +387,7 @@ void read_sections64(FILE *file, Elf64_Shdr *section_table, long count, Elf64_Ha
     {
         if (!strncmp(".symtab", strings->sh_strtb + section_table[i].sh_name, 8))
         {
-            read_symtab(file, &section_table[i], strings);
+            read_symtab(file, section_table, &section_table[i], strings);
         }
 
     }
