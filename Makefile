@@ -1,2 +1,2 @@
 all:
-	gcc -g main.c parser.c parser64.c -I ./ -o elfread
+	gcc -g main.c parser64.c print64.c -I ./ -o elfread

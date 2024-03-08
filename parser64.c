@@ -1,210 +1,11 @@
 #include "parser.h"
 
 
-void print_type64(Elf64_Half c)
-{
-    printf("%-36s", "Type:");
-    switch(c)
-	{
-		case ET_NONE:
-			printf("No file type\n");
-			break;
-
-		case ET_REL:
-			printf("Relocatable\n");
-			break;
-
-		case ET_EXEC:
-			printf("Executable\n");
-			break;
-
-		case ET_DYN:
-			printf("Shared Object\n");
-			break;
-		default:
-			printf("Other (0x%x)\n", c);
-			break;
-	}
-}
-
-void print_machine64(Elf64_Half c)
-{
-    //too many machine types and not relevant anyways
-    printf("%-36s", "Type:");
-    switch(c)
-	{
-		case EM_NONE:
-			printf("None (0x0)\n");
-			break;
-
-		case EM_386:
-			printf("INTEL x86 (0x%x)\n", EM_386);
-			break;
-
-		case EM_ARM:
-			printf("ARM (0x%x)\n", EM_ARM);
-			break;
-
-		default:
-			printf(" 0x%x\n",c);
-			break;
-	}
-}
-
-void print_section_type(Elf64_Word type)
-{
-    switch(type)
-    {
-        case SHT_NULL:
-            printf("%-15s ", STRING_TOKEN(SHT_NULL));
-            break ;
-         case SHT_PROGBITS :
-            printf("%-15s ", STRING_TOKEN(SHT_PROGBITS));
-            break ;
-        case SHT_SYMTAB :
-            printf("%-15s ", STRING_TOKEN(SHT_SYMTAB));
-            break ;
-        case SHT_STRTAB :
-            printf("%-15s ", STRING_TOKEN(SHT_STRTAB));
-            break ;
-        case SHT_RELA :
-            printf("%-15s ", STRING_TOKEN(SHT_RELA));
-            break ;
-        case SHT_HASH :
-            printf("%-15s ", STRING_TOKEN(SHT_HASH));
-            break ;
-        case SHT_DYNAMIC :
-            printf("%-15s ", STRING_TOKEN(SHT_DYNAMIC));
-            break ;
-        case SHT_NOTE :
-            printf("%-15s ", STRING_TOKEN(SHT_NOTE));
-            break ;
-        case SHT_NOBITS :
-            printf("%-15s ", STRING_TOKEN(SHT_NOBITS));
-            break ;
-        case SHT_REL :
-            printf("%-15s ", STRING_TOKEN(SHT_REL));
-            break ;
-        case SHT_SHLIB :
-            printf("%-15s  ", STRING_TOKEN(SHT_SHLIB));
-            break ;
-        case SHT_DYNSYM :
-            printf("%-15s ", STRING_TOKEN(SHT_DYNSYM));
-            break ;
-        case SHT_INIT_ARRAY :
-            printf("%-15s ", STRING_TOKEN(SHT_INIT_ARRAY));
-            break ;
-        case SHT_FINI_ARRAY :
-            printf("%-15s ", STRING_TOKEN(SHT_FINI_ARRAY));
-            break ;
-        case SHT_PREINIT_ARRAY :
-            printf("%-15s ", STRING_TOKEN(SHT_PREINIT_ARRAY));
-            break ;
-        case SHT_GROUP :
-            printf("%-15s ", STRING_TOKEN(SHT_GROUP));
-            break ;
-        case SHT_SYMTAB_SHNDX :
-            printf("%-15s ", STRING_TOKEN(SHT_SYMTAB_SHNDX));
-            break ;
-        case SHT_RELR :
-            printf("%-15s ", STRING_TOKEN(SHT_RELR));
-            break ;
-        default:
-            printf("Invalid type  ");
-            break ;
-    }
-}
-
-void print_section_flags(Elf64_Xword flag)
-{
-    switch (flag)
-    {
-        case SHF_WRITE :
-            printf("%-15s", STRING_TOKEN(SHF_WRITE));
-            break ;
-        case SHF_ALLOC :
-            printf("%-15s", STRING_TOKEN(SHF_ALLOC));
-            break ;
-        case SHF_EXECINSTR :
-            printf("%-15s", STRING_TOKEN(SHF_EXECINSTR));
-            break ;
-        case SHF_MERGE :
-            printf("%-15s", STRING_TOKEN(SHF_MERGE));
-            break ;
-        case SHF_STRINGS :
-            printf("%-15s", STRING_TOKEN(SHF_STRINGS));
-            break ;
-        case SHF_INFO_LINK :
-            printf("%-15s", STRING_TOKEN(SHF_INFO_LINK));
-            break ;
-        case SHF_LINK_ORDER :
-            printf("%-15s", STRING_TOKEN(SHF_LINK_ORDER));
-            break ;
-        case SHF_OS_NONCONFORMING :
-            printf("%-15s", STRING_TOKEN(SHF_OS_NONCONFORMING));
-            break ;
-        case SHF_GROUP :
-            printf("%-15s", STRING_TOKEN(SHF_GROUP));
-            break ;
-        case SHF_TLS :
-            printf("%-15s", STRING_TOKEN(SHF_TLS));
-            break ;
-        case SHF_COMPRESSED :
-            printf("%-15s", STRING_TOKEN(SHF_COMPRESSED));
-            break ;
-        case SHF_MASKOS :
-            printf("%-15s", STRING_TOKEN(SHF_MASKOS));
-            break ;
-        case SHF_MASKPROC :
-            printf("%-15s", STRING_TOKEN(SHF_MASKPROC));
-            break ;
-        case SHF_GNU_RETAIN :
-            printf("%-15s", STRING_TOKEN(SHF_GNU_RETAIN));
-            break ;
-        case SHF_ORDERED :
-            printf("%-15s", STRING_TOKEN(SHF_ORDERED));
-            break ;
-        case SHF_EXCLUDE :
-            printf("%-15s", STRING_TOKEN(SHF_EXCLUDE));
-            break ;
-        default:
-            printf("%-15d", flag);
-            break ;
-    }
-}
-
-void read_header64(FILE *file, Elf64_Ehdr *header)
-{
-    fread(((char *)header) + EI_NIDENT, sizeof(Elf64_Ehdr) - EI_NIDENT, 1, file);
-
-    if (ftell(file) != sizeof(Elf64_Ehdr))
-        D_ERROR("Invalid file size")
-
-    // ------------------ Print info
-    print_header_info(header->e_ident);
-    print_type64(header->e_type);
-    // print_machine64(header->e_machine);
-    printf("%-36s0x%08x\n", "Entry point: ", header->e_entry);
-    printf("%-36s%d\n", "Elf header size: ", header->e_ehsize);
-
-    printf("%-36s%d (bytes)\n", "Section header offset: ", header->e_shoff);
-    printf("%-36s%d\n", "Section header size: ", header->e_shentsize);
-    if ( header->e_shnum == SHN_UNDEF)
-        printf("%-36s%s\n", "Section entries count:", "Undefined");
-    else
-        printf("%-36s%d\n", "Section entries count:", header->e_shnum);
-
-    printf("%-36s%d (bytes)\n", "Program header offset: ", header->e_phoff);
-    printf("%-36s%d\n", "Program header size: ", header->e_phentsize);
-    printf("%-36s%d\n", "Program entries count:", header->e_phnum);
-    // skipping flags because irrelevant
-}
-
 SStrings *make_sh_strtb(FILE *file, Elf64_Shdr *section_table, long count, long e_sht_idx)
 {
     SStrings *strings;
 
-    strings = malloc(sizeof (SStrings));
+    strings = malloc(sizeof(SStrings));
     strings->sh_strtb = malloc(section_table[e_sht_idx].sh_size);
     strings->strtbs = malloc(sizeof(*strings->strtbs) * count);
     strings->count = count;
@@ -236,11 +37,10 @@ SStrings *make_sh_strtb(FILE *file, Elf64_Shdr *section_table, long count, long 
     return strings;
 }
 
-void read_section_headers64(Elf64_Shdr *section_table, SStrings *strings)
+void print_section_headers(Elf64_Shdr *section_table, SStrings *strings)
 {
     printf("[Nr] %-20s %-15s %-16s %-8s %-16s %-11s %-16s %-6s\n",
-        "Name", "Type", "Address", "Offset", "Size", "Entry Size", "Flags", "Align"
-    );
+           "Name", "Type", "Address", "Offset", "Size", "Entry Size", "Flags", "Align");
     for (long i = 0; i < strings->count; ++i)
     {
         printf("[%2d] ", i);
@@ -249,7 +49,7 @@ void read_section_headers64(Elf64_Shdr *section_table, SStrings *strings)
         printf("%016d ", section_table[i].sh_addr);
         printf("%08x ", section_table[i].sh_offset);
         printf("%016x ", section_table[i].sh_size);
-        printf("%011d ", section_table[i].sh_entsize);
+        printf("%011x ", section_table[i].sh_entsize);
         print_section_flags(section_table[i].sh_flags);
         // printf("%6d ", section_table[i].sh_flags);
         printf("%6d ", section_table[i].sh_addralign);
@@ -258,137 +58,321 @@ void read_section_headers64(Elf64_Shdr *section_table, SStrings *strings)
     printf("Done\n");
 }
 
-
 void print_symbol_type(long type)
 {
-    switch(ELF64_ST_TYPE(type)) {
-        case (STT_NOTYPE) :
-            printf("%-15s", STRING_TOKEN(STT_NOTYPE));
-            break ;
+    switch (ELF64_ST_TYPE(type))
+    {
+    case (STT_NOTYPE):
+        printf("%-15s", STRING_TOKEN(STT_NOTYPE));
+        break;
 
-        case (STT_OBJECT) :
-            printf("%-15s", STRING_TOKEN(STT_OBJECT));
-            break ;
+    case (STT_OBJECT):
+        printf("%-15s", STRING_TOKEN(STT_OBJECT));
+        break;
 
-        case (STT_FUNC) :
-            printf("%-15s", STRING_TOKEN(STT_FUNC));
-            break ;
+    case (STT_FUNC):
+        printf("%-15s", STRING_TOKEN(STT_FUNC));
+        break;
 
-        case (STT_SECTION) :
-            printf("%-15s", STRING_TOKEN(STT_SECTION));
-            break ;
+    case (STT_SECTION):
+        printf("%-15s", STRING_TOKEN(STT_SECTION));
+        break;
 
-        case (STT_FILE) :
-            printf("%-15s", STRING_TOKEN(STT_FILE));
-            break ;
+    case (STT_FILE):
+        printf("%-15s", STRING_TOKEN(STT_FILE));
+        break;
 
-        case (STT_COMMON) :
-            printf("%-15s", STRING_TOKEN(STT_COMMON));
-            break ;
+    case (STT_COMMON):
+        printf("%-15s", STRING_TOKEN(STT_COMMON));
+        break;
 
-        case (STT_TLS) :
-            printf("%-15s", STRING_TOKEN(STT_TLS));
-            break ;
+    case (STT_TLS):
+        printf("%-15s", STRING_TOKEN(STT_TLS));
+        break;
 
-        default :
-            printf("Invalid type");
-            break ;
+    default:
+        printf("Invalid type");
+        break;
     }
 }
 
 void print_symbol_bind(long bind)
 {
-    switch(ELF64_ST_BIND(bind)){
-        case (STB_LOCAL) :
-            printf("%-15s", STRING_TOKEN(STB_LOCAL));
-            break ;
-        case (STB_GLOBAL) :
-            printf("%-15s", STRING_TOKEN(STB_GLOBAL));
-            break ;
-        case (STB_WEAK) :
-            printf("%-15s", STRING_TOKEN(STB_WEAK));
-            break ;
-        default :
-            printf("U_BIND");
-            break ;
+    switch (ELF64_ST_BIND(bind))
+    {
+    case (STB_LOCAL):
+        printf("%-15s", STRING_TOKEN(STB_LOCAL));
+        break;
+    case (STB_GLOBAL):
+        printf("%-15s", STRING_TOKEN(STB_GLOBAL));
+        break;
+    case (STB_WEAK):
+        printf("%-15s", STRING_TOKEN(STB_WEAK));
+        break;
+    default:
+        printf("U_BIND");
+        break;
     }
 }
 
 void print_symbol_vis(long vis)
 {
-    switch(vis)
+    switch (vis)
     {
-        case (STT_NOTYPE) :
-            printf("%-15s", STRING_TOKEN(STT_NOTYPE));
-            break ;
-        case (STT_OBJECT) :
-            printf("%-15s", STRING_TOKEN(STT_OBJECT));
-            break ;
-        case (STT_FUNC) :
-            printf("%-15s", STRING_TOKEN(STT_FUNC));
-            break ;
-        case (STT_SECTION) :
-            printf("%-15s", STRING_TOKEN(STT_SECTION));
-            break ;
-        case (STT_FILE) :
-            printf("%-15s", STRING_TOKEN(STT_FILE));
-            break ;
-        case (STT_COMMON) :
-            printf("%-15s", STRING_TOKEN(STT_COMMON));
-            break ;
-        case (STT_TLS) :
-            printf("%-15s", STRING_TOKEN(STT_TLS));
-            break ;
+    case (STT_NOTYPE):
+        printf("%-15s", STRING_TOKEN(STT_NOTYPE));
+        break;
+    case (STT_OBJECT):
+        printf("%-15s", STRING_TOKEN(STT_OBJECT));
+        break;
+    case (STT_FUNC):
+        printf("%-15s", STRING_TOKEN(STT_FUNC));
+        break;
+    case (STT_SECTION):
+        printf("%-15s", STRING_TOKEN(STT_SECTION));
+        break;
+    case (STT_FILE):
+        printf("%-15s", STRING_TOKEN(STT_FILE));
+        break;
+    case (STT_COMMON):
+        printf("%-15s", STRING_TOKEN(STT_COMMON));
+        break;
+    case (STT_TLS):
+        printf("%-15s", STRING_TOKEN(STT_TLS));
+        break;
     }
 }
 
-void read_symtab(FILE *file,Elf64_Shdr *other_sects, Elf64_Shdr *section_hdr, SStrings *strings)
+void print_symtab(SectionOcc *tables, Section *all_sections, SStrings *strings)
 {
     long entry_count;
     Elf64_Sym *symbols;
+    Section *section;
 
-    entry_count  = section_hdr->sh_size / section_hdr->sh_entsize;
-    symbols = malloc(section_hdr->sh_size);
-
-    printf("Symbol table %s contains %d entries : \n", strings->sh_strtb + section_hdr->sh_name, entry_count);
-    printf("[Nr]: %-18s %-3s %-15s %-15s %-15s %-4s %-10s\n",
-        "Value", "Size", "Type", "Bind", "Vis", "Ndx", "Name"
-    );
-    fseek(file, section_hdr->sh_offset, SEEK_SET);
-    fread(symbols, section_hdr->sh_entsize, entry_count, file);
-    for (int i = 0; i < entry_count; ++i)
+    for (int x = 0; x < tables->count; ++x)
     {
-        printf("[%2d] ", i);
-        printf("%018d ", symbols[i].st_value);
-        printf("%5d ", symbols[i].st_size);
-        print_symbol_type(symbols[i].st_info);
-        print_symbol_bind(symbols[i].st_info);
-        print_symbol_vis(symbols[i].st_other);
-        printf("%5d ", symbols[i].st_shndx);
-        if (ELF64_ST_TYPE(symbols[i].st_info) == STT_SECTION)
+        section = tables->sections[x];
+        symbols = (Elf64_Sym *)section->data;
+        entry_count = section->header->sh_size / section->header->sh_entsize;
+        printf("Symbol table %s contains %d entries : \n", strings->sh_strtb + section->header->sh_name, entry_count);
+        printf("[Nr]: %-18s %-3s %-15s %-15s %-15s %-4s %-10s\n",
+            "Value", "Size", "Type", "Bind", "Vis", "Ndx", "Name");
+        for (int i = 0; i < entry_count; ++i)
         {
-            printf("%-10s", strings->sh_strtb + other_sects[symbols[i].st_shndx].sh_name);
+            printf("[%2d] ", i);
+            printf("%018d ", symbols[i].st_value);
+            printf("%5d ", symbols[i].st_size);
+            print_symbol_type(symbols[i].st_info);
+            print_symbol_bind(symbols[i].st_info);
+            print_symbol_vis(symbols[i].st_other);
+            printf("%5d ", symbols[i].st_shndx);
+            // Link is the section header index of the associated string table.
+            // If the symbol is a section, the name is in the sh_strb instead of the associated string table (which is null)
+            if (ELF64_ST_TYPE(symbols[i].st_info) == STT_SECTION)
+            {
+                printf("%-10s", strings->sh_strtb + all_sections[symbols[i].st_shndx].header->sh_name);
+            }
+            else
+                printf("%-10s", ((char *)section->link->data) + symbols[i].st_name);
+            printf("\n");
         }
+    }
+}
+
+void make_relas(FILE *file, Elf64_Shdr *other_sects, Elf64_Shdr *section_header, SStrings *strings)
+{
+    Elf64_Rela *rels;
+    Elf64_Sym sym;
+    Elf64_Shdr *sym_hdr;
+    long entry_count;
+
+    entry_count = section_header->sh_size / section_header->sh_entsize;
+    rels = malloc(section_header->sh_size);
+    printf("Relocation section %s at offset %x contains %d entries: \n",
+        strings->sh_strtb + section_header->sh_name ,
+        section_header->sh_offset,
+        entry_count);
+
+    fseek(file, section_header->sh_offset, SEEK_SET);
+    fread(rels, section_header->sh_entsize, entry_count, file);
+
+    fseek(file, sym_hdr->sh_offset, SEEK_SET);
+    fread(&sym, sym_hdr->sh_entsize, 1, file);
+
+    printf("%-18s %-18s %-18s %-18s %-20s\n",
+    "Offset", "Info", "Type", "Sym. Value", "Sym. Name + Addend");
+    sym_hdr = &other_sects[section_header->sh_link];
+
+    for (int i = 0;  i < entry_count; ++i)
+    {
+
+        printf("%018x ", rels[i].r_offset);
+        printf("%018x ", rels[i].r_info);
+        printf("%018d ", sym.st_value);
+
+
+        if (ELF64_ST_TYPE(sym.st_info) == STT_SECTION)
+            printf("%10s + %d", strings->sh_strtb + other_sects[sym.st_shndx].sh_name, rels[i].r_addend);
         else
-            printf("%-10s", strings->strtbs[section_hdr->sh_link] + symbols[i].st_name);
+            printf("%10s + %d", strings->strtbs[sym_hdr->sh_link] + sym_hdr->sh_name , rels[i].r_addend);
         printf("\n");
     }
-    free(symbols);
 }
 
-void read_sections64(FILE *file, Elf64_Shdr *section_table, long count, Elf64_Half e_shstrndx)
+
+Section *make_sections(FILE *file, Elf64_Shdr *headers, long count)
 {
-    SStrings *strings;
-
-    strings = make_sh_strtb(file, section_table, count , e_shstrndx);
-
-    read_section_headers64(section_table, strings);
+    Section *result;
+    Elf64_Sym sym;
+    result = calloc(count,  sizeof(Section));
     for (int i = 0; i < count; ++i)
     {
-        if (!strncmp(".symtab", strings->sh_strtb + section_table[i].sh_name, 8))
-        {
-            read_symtab(file, section_table, &section_table[i], strings);
-        }
+        result[i].data = malloc(headers[i].sh_size);
+        result[i].header = &headers[i];
+        int c = fseek(file, headers[i].sh_offset, SEEK_SET);
+        // printf("Size %d %x\n", c, headers[i].sh_offset);
+        fread(result[i].data, headers[i].sh_size, 1, file);
+        result[i].link = &result[headers[i].sh_link];
 
     }
+
+    return result;
 }
+
+void make_sect_tab(SectionT *sect_tab, Section *sections, long count)
+{
+
+    printf("Count %ld\n", count);
+    for (int i = 0; i < count; ++i)
+    {
+        switch (sections[i].header->sh_type){
+            case (SHT_STRTAB):
+                sect_tab->strtab.count++;
+                break ;
+            case (SHT_SYMTAB):
+                sect_tab->symtab.count++;
+                break ;
+            case (SHT_DYNAMIC):
+                sect_tab->dyn.count++;
+                break ;
+            case (SHT_REL):
+                sect_tab->rel.count++;
+                break ;
+            case (SHT_RELA):
+                sect_tab->rela.count++;
+                break ;
+            case (SHT_NOTE):
+                sect_tab->note.count++;
+                break ;
+            default :
+                break ;
+        }
+    }
+
+    sect_tab->strtab.sections = malloc(sizeof (Section *) * sect_tab->strtab.count);
+    sect_tab->strtab.count = 0;
+    sect_tab->symtab.sections = malloc(sizeof (Section *) * sect_tab->symtab.count);
+    sect_tab->symtab.count = 0;
+    sect_tab->dyn.sections = malloc(sizeof (Section *) * sect_tab->dyn.count);
+    sect_tab->dyn.count = 0;
+    sect_tab->rel.sections = malloc(sizeof (Section *) * sect_tab->rel.count);
+    sect_tab->rel.count = 0;
+    sect_tab->rela.sections = malloc(sizeof (Section *) * sect_tab->rela.count);
+    sect_tab->rela.count = 0;
+    sect_tab->note.sections = malloc(sizeof (Section *) * sect_tab->note.count);
+    sect_tab->note.count = 0;
+
+
+
+    for (int i = 0; i < count; ++i)
+    {
+        switch (sections[i].header->sh_type){
+            case (SHT_STRTAB):
+                sect_tab->strtab.sections[sect_tab->strtab.count] = &sections[i];
+                sect_tab->strtab.count++;
+                break ;
+            case (SHT_SYMTAB):
+                sect_tab->symtab.sections[sect_tab->symtab.count] = &sections[i];
+                sect_tab->symtab.count++;
+                break ;
+            case (SHT_DYNAMIC):
+                sect_tab->dyn.sections[sect_tab->dyn.count] = &sections[i];
+                sect_tab->dyn.count++;
+                break ;
+            case (SHT_REL):
+                sect_tab->rel.sections[sect_tab->rel.count] = &sections[i];
+                sect_tab->rel.count++;
+                break ;
+            case (SHT_RELA):
+                sect_tab->rela.sections[sect_tab->rela.count] = &sections[i];
+                sect_tab->rela.count++;
+                break ;
+            case (SHT_NOTE):
+                sect_tab->note.sections[sect_tab->note.count] = &sections[i];
+                sect_tab->note.count++;
+                break ;
+            default :
+                break ;
+        }
+    }
+
+}
+
+
+void read_sections64(FILE *file, Elf64_Shdr *sect_hdr, long count, Elf64_Half e_shstrndx)
+{
+    SStrings    *strings;
+    Section     *sections;
+    SectionT    sec_tab = {0};
+
+    strings = make_sh_strtb(file, sect_hdr, count, e_shstrndx);
+    sections = make_sections(file, sect_hdr, count);
+
+    make_sect_tab(&sec_tab, sections, count);
+    print_section_headers(sect_hdr, strings);
+
+    print_symtab(&sec_tab.symtab, sections,strings);
+    // for (int i = 0; i < count; ++i)
+    // {
+    //     if (!strncmp(".symtab", strings->sh_strtb + sect_hdr[i].sh_name, 8))
+    //         read_symtab(file, sect_hdr, &sect_hdr[i], strings);
+    //     if (!strncmp(".rela", strings->sh_strtb + sect_hdr[i].sh_name, 5))
+    //         read_rela_section(file, sect_hdr, &sect_hdr[i], strings);
+    // }
+}
+
+int read_header_info(FILE *file, unsigned char *hdr_info)
+{
+    fread(hdr_info, EI_NIDENT, 1, file);
+
+// ------------------ Error check
+    if (ftell(file) != EI_NIDENT)
+        D_ERROR("Invalid file size")
+
+// Should start with 0x7fELF
+    if (
+        hdr_info[EI_MAG0] != ELFMAG0 ||
+        hdr_info[EI_MAG1] != ELFMAG1 ||
+        hdr_info[EI_MAG2] != ELFMAG2 ||
+        hdr_info[EI_MAG3] != ELFMAG3
+        )
+        D_ERROR("Invalid ELF header")
+
+    int class;
+
+// 1: 32bit 2: 64 bit
+    if ((class = hdr_info[EI_CLASS]) == ELFCLASSNONE)
+        D_ERROR("Invalid ELF class")
+
+// 1: Little endian 2: Big endian
+    if (hdr_info[EI_DATA] == ELFDATANONE)
+        D_ERROR("Invalid data encoding")
+
+    if (hdr_info[EI_VERSION] != EV_CURRENT)
+        D_ERROR("Invalid version")
+
+    return class;
+}
+// %[flags][width][.precision][size]type
+
+

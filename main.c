@@ -25,11 +25,11 @@ int main(int argc, char **argv)
 
     if (class == ELFCLASS32)
     {
-        Elf32_Ehdr header;
+        // Elf32_Ehdr header;
 
-        memcpy(header.e_ident, hdr_info, EI_NIDENT);
-        // read_header32(&header);
-
+        // memcpy(header.e_ident, hdr_info, EI_NIDENT);
+        // // read_header32(&header);
+        printf("32 bit files not supported");
     }
     else if (class == ELFCLASS64)
     {
@@ -64,7 +64,6 @@ int main(int argc, char **argv)
         if (count != 0)
         {
             fseek(file, header.e_shoff, SEEK_SET);
-            // printf("HELLO %p\n", section_table);
             fread(section_table, sizeof(Elf64_Shdr),header.e_shentsize  * count, file);
             read_sections64(file, section_table, count, header.e_shstrndx);
         }
