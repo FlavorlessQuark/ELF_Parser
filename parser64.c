@@ -219,6 +219,45 @@ void print_relas(SectionOcc *tables, Section *all_sections, SStrings *strings)
     printf("\n");
 }
 
+void print_relss(SectionOcc *tables, Section *all_sections, SStrings *strings)
+{
+    Elf64_Rela *rel;
+    long entry_count;
+    Section *section;
+    Section *symbol;
+
+    for (int x = 0; x < tables->count; ++x)
+    {
+        section = tables->sections[x];
+        entry_count = section->header->sh_size / section->header->sh_entsize;
+        printf("Relocation section %s at offset 0x%x contains %d entries: \n",
+            strings->sh_strtb + section->header->sh_name ,
+            section->header->sh_offset,
+            entry_count);
+
+        printf("%-18s %-18s %-18s %-18s %-20s\n",
+        "Offset", "Info", "Type", "Sym. Value", "Sym. Name");
+
+        rel = section->data;
+        for (int i = 0;  i < entry_count; ++i)
+        {
+            symbol = section->link;
+            Elf64_Sym *symdata = &(((Elf64_Sym *)(symbol->data))[ELF64_R_SYM(rel[i].r_info)]);
+            printf("%018x ", rel[i].r_offset);
+            printf("%018x ", rel[i].r_info);
+            printf("%018x ", ELF64_R_TYPE(rel[i].r_info));
+            printf("%018d ", symdata->st_value);
+
+            if (ELF64_ST_TYPE(symdata->st_info) == STT_SECTION)
+                printf("%10s", strings->sh_strtb + all_sections[symdata->st_shndx].header->sh_name);
+            else
+                printf("%10s", ((char *)(symbol->link->data)) +  symdata->st_name);
+            printf("\n");
+        }
+    }
+    printf("\n");
+}
+
 Section *make_sections(FILE *file, Elf64_Shdr *headers, long count)
 {
     Section *result;
@@ -331,6 +370,10 @@ void read_sections64(FILE *file, Elf64_Shdr *sect_hdr, long count, Elf64_Half e_
         print_symtab(&sec_tab.symtab, sections,strings);
     if (sec_tab.rela.count > 0)
         print_relas(&sec_tab.rela, sections, strings);
+    if (sec_tab.rel.count > 0)
+        print_relas(&sec_tab.rel, sections, strings);
+
+
     // for (int i = 0; i < count; ++i)
     // {
     //     if (!strncmp(".symtab", strings->sh_strtb + sect_hdr[i].sh_name, 8))
@@ -373,4 +416,20 @@ int read_header_info(FILE *file, unsigned char *hdr_info)
 }
 // %[flags][width][.precision][size]type
 
+int read_segments(FILE *file, Elf64_Phdr *seg_hdr, long count)
+{
+    printf("%-18s %-16s %-16s %-16s -16s -16s -16s -5s -8s\n",
+    "Type", "Offset", "VirtAdrr", "PhysAddr", "FileSiz", "MemSiz", "Flg", "Align");
+    for ( int x = 0; x < count; ++x)
+    {
+        printf("%16d", seg_hdr[x].p_type );
+        printf("0x%12x", seg_hdr[x].p_offset );
+        printf("0x%16x", seg_hdr[x].p_vaddr );
+        printf("0x%16x", seg_hdr[x].p_paddr );
+        printf("%16d", seg_hdr[x].p_filesz );
+        printf("%4d", seg_hdr[x].p_flags );
+        printf("%8d", seg_hdr[x].p_align);
+
+    }
+}
 

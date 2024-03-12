@@ -35,6 +35,7 @@ int main(int argc, char **argv)
     {
         Elf64_Ehdr header;
         Elf64_Shdr *section_table;
+        Elf64_Phdr *program_table;
         long count;
 
         memcpy(header.e_ident, hdr_info, EI_NIDENT);
@@ -64,7 +65,7 @@ int main(int argc, char **argv)
         if (count != 0)
         {
             fseek(file, header.e_shoff, SEEK_SET);
-            fread(section_table, sizeof(Elf64_Shdr),header.e_shentsize  * count, file);
+            fread(section_table, header.e_shentsize, count, file);
             read_sections64(file, section_table, count, header.e_shstrndx);
         }
         else
@@ -72,7 +73,9 @@ int main(int argc, char **argv)
 
         if (header.e_phnum != 0)
         {
-
+            program_table = malloc( header.e_phentsize * header.e_phnum);
+            fseek(file, header.e_phoff, SEEK_SET);
+            fread(program_table, header.e_phentsize, header.e_phnum, file );
         }
         else
             printf("There are no program headers in this file\n");
