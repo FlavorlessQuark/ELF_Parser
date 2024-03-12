@@ -177,53 +177,51 @@ void print_symtab(SectionOcc *tables, Section *all_sections, SStrings *strings)
             printf("\n");
         }
     }
+    printf("\n");
 }
 
-void make_relas(FILE *file, Elf64_Shdr *other_sects, Elf64_Shdr *section_header, SStrings *strings)
+void print_relas(SectionOcc *tables, Section *all_sections, SStrings *strings)
 {
-    Elf64_Rela *rels;
-    Elf64_Sym sym;
-    Elf64_Shdr *sym_hdr;
+    Elf64_Rela *rela;
     long entry_count;
+    Section *section;
+    Section *symbol;
 
-    entry_count = section_header->sh_size / section_header->sh_entsize;
-    rels = malloc(section_header->sh_size);
-    printf("Relocation section %s at offset %x contains %d entries: \n",
-        strings->sh_strtb + section_header->sh_name ,
-        section_header->sh_offset,
-        entry_count);
-
-    fseek(file, section_header->sh_offset, SEEK_SET);
-    fread(rels, section_header->sh_entsize, entry_count, file);
-
-    fseek(file, sym_hdr->sh_offset, SEEK_SET);
-    fread(&sym, sym_hdr->sh_entsize, 1, file);
-
-    printf("%-18s %-18s %-18s %-18s %-20s\n",
-    "Offset", "Info", "Type", "Sym. Value", "Sym. Name + Addend");
-    sym_hdr = &other_sects[section_header->sh_link];
-
-    for (int i = 0;  i < entry_count; ++i)
+    for (int x = 0; x < tables->count; ++x)
     {
+        section = tables->sections[x];
+        entry_count = section->header->sh_size / section->header->sh_entsize;
+        printf("Relocation section %s at offset 0x%x contains %d entries: \n",
+            strings->sh_strtb + section->header->sh_name ,
+            section->header->sh_offset,
+            entry_count);
 
-        printf("%018x ", rels[i].r_offset);
-        printf("%018x ", rels[i].r_info);
-        printf("%018d ", sym.st_value);
+        printf("%-18s %-18s %-18s %-18s %-20s\n",
+        "Offset", "Info", "Type", "Sym. Value", "Sym. Name + Addend");
 
+        rela = section->data;
+        for (int i = 0;  i < entry_count; ++i)
+        {
+            symbol = section->link;
+            Elf64_Sym *symdata = &(((Elf64_Sym *)(symbol->data))[ELF64_R_SYM(rela[i].r_info)]);
+            printf("%018x ", rela[i].r_offset);
+            printf("%018x ", rela[i].r_info);
+            printf("%018x ", ELF64_R_TYPE(rela[i].r_info));
+            printf("%018d ", symdata->st_value);
 
-        if (ELF64_ST_TYPE(sym.st_info) == STT_SECTION)
-            printf("%10s + %d", strings->sh_strtb + other_sects[sym.st_shndx].sh_name, rels[i].r_addend);
-        else
-            printf("%10s + %d", strings->strtbs[sym_hdr->sh_link] + sym_hdr->sh_name , rels[i].r_addend);
-        printf("\n");
+            if (ELF64_ST_TYPE(symdata->st_info) == STT_SECTION)
+                printf("%10s + %d", strings->sh_strtb + all_sections[symdata->st_shndx].header->sh_name, rela[i].r_addend);
+            else
+                printf("%10s + %d", ((char *)(symbol->link->data)) +  symdata->st_name, rela[i].r_addend);
+            printf("\n");
+        }
     }
+    printf("\n");
 }
-
 
 Section *make_sections(FILE *file, Elf64_Shdr *headers, long count)
 {
     Section *result;
-    Elf64_Sym sym;
     result = calloc(count,  sizeof(Section));
     for (int i = 0; i < count; ++i)
     {
@@ -233,7 +231,6 @@ Section *make_sections(FILE *file, Elf64_Shdr *headers, long count)
         // printf("Size %d %x\n", c, headers[i].sh_offset);
         fread(result[i].data, headers[i].sh_size, 1, file);
         result[i].link = &result[headers[i].sh_link];
-
     }
 
     return result;
@@ -318,7 +315,6 @@ void make_sect_tab(SectionT *sect_tab, Section *sections, long count)
 
 }
 
-
 void read_sections64(FILE *file, Elf64_Shdr *sect_hdr, long count, Elf64_Half e_shstrndx)
 {
     SStrings    *strings;
@@ -331,13 +327,15 @@ void read_sections64(FILE *file, Elf64_Shdr *sect_hdr, long count, Elf64_Half e_
     make_sect_tab(&sec_tab, sections, count);
     print_section_headers(sect_hdr, strings);
 
-    print_symtab(&sec_tab.symtab, sections,strings);
+    if (sec_tab.symtab.count > 0)
+        print_symtab(&sec_tab.symtab, sections,strings);
+    if (sec_tab.rela.count > 0)
+        print_relas(&sec_tab.rela, sections, strings);
     // for (int i = 0; i < count; ++i)
     // {
     //     if (!strncmp(".symtab", strings->sh_strtb + sect_hdr[i].sh_name, 8))
     //         read_symtab(file, sect_hdr, &sect_hdr[i], strings);
     //     if (!strncmp(".rela", strings->sh_strtb + sect_hdr[i].sh_name, 5))
-    //         read_rela_section(file, sect_hdr, &sect_hdr[i], strings);
     // }
 }
 

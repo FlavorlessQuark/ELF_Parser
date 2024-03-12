@@ -172,8 +172,6 @@ void print_section_flags(Elf64_Xword flag)
     }
 }
 
-
-
 void read_header64(FILE *file, Elf64_Ehdr *header)
 {
     fread(((char *)header) + EI_NIDENT, sizeof(Elf64_Ehdr) - EI_NIDENT, 1, file);
@@ -200,7 +198,6 @@ void read_header64(FILE *file, Elf64_Ehdr *header)
     printf("%-36s%d\n", "Program entries count:", header->e_phnum);
     // skipping flags because irrelevant
 }
-
 
 void print_header_info(unsigned char *hdr_info)
 {
