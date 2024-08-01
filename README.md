@@ -13,3 +13,9 @@ In preparation of making a hot-code reloading tool that uses object files instea
 
 https://github.com/FlavorlessQuark/hot-code-reloading
 `
+
+## Usage
+
+Only supports 64 bits files. 
+Usage:
+``` ./elfread [your_elf_file]
