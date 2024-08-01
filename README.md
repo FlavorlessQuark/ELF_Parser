@@ -18,4 +18,6 @@ https://github.com/FlavorlessQuark/hot-code-reloading
 
 Only supports 64 bits files. 
 Usage:
-``` ./elfread [your_elf_file]
+```
+./elfread [your_elf_file]
+```
