@@ -19,5 +19,6 @@ https://github.com/FlavorlessQuark/hot-code-reloading
 Only supports 64 bits files. 
 Usage:
 ```
+  make
 ./elfread [your_elf_file]
 ```
